@@ -1,0 +1,108 @@
+name: team-dev-group6
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: team-dev-group6-app
+    working_dir: /var/www/html
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-team_dev_group6}
+      DB_USERNAME: ${DB_USERNAME:-team_dev_group6}
+      DB_PASSWORD: ${DB_PASSWORD:-change_me}
+    command: >
+      sh -lc "if [ -f artisan ]; then
+        php-fpm -F;
+      else
+        echo 'Laravel source not found in ./src. Create the Laravel app there first.';
+        sleep infinity;
+      fi"
+    networks:
+      - team-dev-group6
+
+  nginx:
+    image: nginx:alpine
+    container_name: team-dev-group6-nginx
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./src:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - team-dev-group6
+
+  bun:
+    image: oven/bun:1
+    container_name: team-dev-group6-bun
+    working_dir: /var/www/html
+    volumes:
+      - ./src:/var/www/html
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    command: >
+      sh -lc "if [ -f package.json ]; then
+        bun install && bun run dev -- --host 0.0.0.0;
+      else
+        echo 'Frontend package.json not found in ./src. Create the Laravel React starter kit first.';
+        sleep infinity;
+      fi"
+    networks:
+      - team-dev-group6
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: team-dev-group6-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-team_dev_group6}
+      POSTGRES_USER: ${DB_USERNAME:-team_dev_group6}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-team_dev_group6}
+    ports:
+      - "${DB_FORWARD_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-team_dev_group6} -d ${DB_DATABASE:-team_dev_group6}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - team-dev-group6
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: team-dev-group6-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - team-dev-group6
+
+networks:
+  team-dev-group6:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:

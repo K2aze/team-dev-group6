@@ -1,0 +1,183 @@
+#+TITLE: Dev docs
+
+* Initialization the project
+** Projects name
+=dev-team-group6= as a mentor said or sthing like that
+** Project structure
+*** Dependencies
+- Docker
+- PHP
+- PostgreSQL
+- Nginx
+- React
+- Bun / npm
+*** File tree
+#+begin_src sh :results output
+  tree -L 3 -I "node_modules" --noreport ./
+#+end_src
+
+#+RESULTS:
+#+begin_example
+./
+├── compose.yml
+├── Dev.org
+├── docker
+│   ├── nginx
+│   │   └── default.conf
+│   └── php
+│       └── Dockerfile
+└── src
+    ├── app
+    │   ├── Http
+    │   ├── Models
+    │   └── Providers
+    ├── artisan
+    ├── bootstrap
+    │   ├── app.php
+    │   ├── cache
+    │   └── providers.php
+    ├── bun.lock
+    ├── components.json
+    ├── composer.json
+    ├── composer.lock
+    ├── config
+    │   ├── app.php
+    │   ├── auth.php
+    │   ├── cache.php
+    │   ├── database.php
+    │   ├── filesystems.php
+    │   ├── logging.php
+    │   ├── mail.php
+    │   ├── queue.php
+    │   ├── services.php
+    │   └── session.php
+    ├── database
+    │   ├── database.sqlite
+    │   ├── factories
+    │   ├── migrations
+    │   └── seeders
+    ├── eslint.config.js
+    ├── package.json
+    ├── package-lock.json
+    ├── phpunit.xml
+    ├── public
+    │   ├── favicon.ico
+    │   ├── hot
+    │   ├── index.php
+    │   ├── logo.svg
+    │   └── robots.txt
+    ├── resources
+    │   ├── css
+    │   ├── js
+    │   └── views
+    ├── routes
+    │   ├── auth.php
+    │   ├── console.php
+    │   ├── settings.php
+    │   └── web.php
+    ├── storage
+    │   ├── app
+    │   ├── framework
+    │   └── logs
+    ├── tests
+    │   ├── Feature
+    │   ├── Pest.php
+    │   ├── TestCase.php
+    │   └── Unit
+    ├── tsconfig.json
+    ├── vendor
+    │   ├── autoload.php
+    │   ├── bin
+    │   ├── brick
+    │   ├── carbonphp
+    │   ├── composer
+    │   ├── dflydev
+    │   ├── doctrine
+    │   ├── dragonmantank
+    │   ├── egulias
+    │   ├── fakerphp
+    │   ├── filp
+    │   ├── fruitcake
+    │   ├── graham-campbell
+    │   ├── guzzlehttp
+    │   ├── hamcrest
+    │   ├── inertiajs
+    │   ├── laravel
+    │   ├── league
+    │   ├── mockery
+    │   ├── monolog
+    │   ├── myclabs
+    │   ├── nesbot
+    │   ├── nette
+    │   ├── nikic
+    │   ├── nunomaduro
+    │   ├── phar-io
+    │   ├── phpoption
+    │   ├── phpunit
+    │   ├── psr
+    │   ├── psy
+    │   ├── ralouphie
+    │   ├── ramsey
+    │   ├── sebastian
+    │   ├── staabm
+    │   ├── symfony
+    │   ├── theseer
+    │   ├── tightenco
+    │   ├── tijsverkoyen
+    │   ├── vlucas
+    │   └── voku
+    └── vite.config.js
+#+end_example
+*** Dockerfile
+- =app=       : PHP
+- =bun=       : vite and dependency
+- =nginx=     : entry point
+- =postgres=  : database
+- =adminer=   : SQL UI manager
+
+------
+
+* Config
+** pgAdmin
+- Password: migrate on [[./.env::10][.env]]
+- Add server:
+  + Name		: str any
+  + Host name / address	: postgres
+  + username		: [[./.env::10][.env]]
+  + password		: [[./env::10][.env]]
+
+------
+* Issue
+** Cannot write on disk
+- ErrorException: =tempnam(): file created in the system's temporary directory=
+- Fix:
+  On terminal:
+  #+begin_src bash
+    chown -R www-data:www-data storage bootstrap/cache
+    chmod -R 775 storage bootstrap/cache
+  #+end_src
+- Reason: The project was created by the root user via =composer create laravel\[sth]=, so the files it created are also owned by root.
+
+** Splash white screen after fix cannot write on disk
+- Fix:
+  On =src/vite.config.*=
+  #+begin_src typescript
+    server: {
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'localhost',
+        },
+    },
+  #+end_src
+
+* Devolopment roadmap
+|       <c>        |  <c>  | <l>           |    <c>     |
+|       DATE       |  WHO  | DOES          |    DONE    |
+|------------------+-------+---------------+------------|
+| <2026-11-25 Wed> | K2aze | Auth route    | PROCESSING |
+| <2026-11-25 Wed> | K2aze | Auth frontend | PROCESSING |
+|------------------+-------+---------------+------------|
+
+
