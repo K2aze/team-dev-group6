@@ -1,17 +1,16 @@
 #+TITLE: Dev docs
 
-* Initialization the project
+* Project setup
 ** Projects name
-=dev-team-group6= as a mentor said or sthing like that
-** Project structure
-*** Dependencies
+=dev-team-group6= (as suggested by the mentor).
+** Dependencies
 - Docker
 - PHP
 - PostgreSQL
 - Nginx
 - React
-- Bun / npm
-*** File tree
+- Bun
+** File tree
 #+begin_src sh :results output
   tree -L 3 -I "node_modules" --noreport ./
 #+end_src
@@ -128,39 +127,55 @@
     │   └── voku
     └── vite.config.js
 #+end_example
-*** Dockerfile
-- =app=       : PHP
-- =bun=       : vite and dependency
-- =nginx=     : entry point
-- =postgres=  : database
-- =adminer=   : SQL UI manager
+** Docker services
+| Service  | Role                     |
+|----------+--------------------------|
+| =app=      | PHP (Laravel)            |
+| =bun=      | Vite and JS dependencies |
+| =nginx=    | Entry point              |
+| =postgres= | Database                 |
+| =adminer=  | SQL management UI        |
+|----------+--------------------------|
 
-------
+----
 
-* Config
+* Getting started
+After cloning the repository:
+#+begin_src bash
+  cp .env /.env                 # skip if .env already exists
+  cp src/.env.example src/.env  # skip if src/.env already exists
+  docker compose up --build -d
+  docker compose exec app bash  # or: sh
+
+  # Inside the app container
+  composer install
+  php artisan key:generate
+#+end_src
+
+---
+* Configuration
 ** pgAdmin
-- Password: migrate on [[./.env::10][.env]]
-- Add server:
-  + Name		: str any
-  + Host name / address	: postgres
-  + username		: [[./.env::10][.env]]
-  + password		: [[./env::10][.env]]
+Take the credentials from [[./.env][.env]]
+
+Add a server with:
+- Name: any string
+- Host name / address: =postgres=
+- Username: see [[./.env][.env]]
+- Password: see [[./.env::10][.env]]
 
 ------
-* Issue
-** Cannot write on disk
-- ErrorException: =tempnam(): file created in the system's temporary directory=
-- Fix:
-  On terminal:
+* Known issues
+** Cannot write to disk
+- Error: =tempnam(): file created in the system's temporary directory=
+- Cause: the project was created by =root= (via =composer create-project=), so its files are owned by root.
+- Fix (inside the =app= container):
   #+begin_src bash
     chown -R www-data:www-data storage bootstrap/cache
     chmod -R 775 storage bootstrap/cache
   #+end_src
-- Reason: The project was created by the root user via =composer create laravel\[sth]=, so the files it created are also owned by root.
 
-** Splash white screen after fix cannot write on disk
-- Fix:
-  On =src/vite.config.*=
+** White screen after fixing the disk error
+- Fix:update =src/vite.config.*=:
   #+begin_src typescript
     server: {
         host: '0.0.0.0',
@@ -172,13 +187,14 @@
     },
   #+end_src
 
+-----
+
 * Devolopment roadmap
 |------------------+-------+---------------+------------|
 |       <c>        |  <c>  | <l>           |    <c>     |
-|       DATE       |  WHO  | DOES          |    DONE    |
+|       Date       |  Who  | Task          |   Status   |
 |------------------+-------+---------------+------------|
 | <2026-11-25 Wed> | K2aze | Auth route    | PROCESSING |
 | <2026-11-25 Wed> | K2aze | Auth frontend | PROCESSING |
-|------------------+-------+---------------+------------|
 
 
